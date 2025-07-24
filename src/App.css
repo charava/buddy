@@ -99,7 +99,7 @@ body, .App-bg {
 }
 
 .card {
-  margin: 24px auto 0 auto;
+  /* margin: 24px auto 0 auto; */
   background: var(--color-bg-card);
   border-radius: var(--border-radius-sm);
   box-shadow: 0 2px 16px var(--color-shadow);
