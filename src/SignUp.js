@@ -19,7 +19,7 @@ function getReadableDatetime() {
 function SignUp() {
   const navigate = useNavigate();
   const [phone, setPhone] = useState('');
-  const [username, setUsername] = useState('');
+  // const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
@@ -28,8 +28,18 @@ function SignUp() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    if (!phone || !username || !password || !confirmPassword) {
+    if (!phone || !password || !confirmPassword) {
       setError('All fields are required.');
+      return;
+    }
+    // Disallow hyphens in phone number
+    if (phone.includes('-')) {
+      setError('Please do not use hyphens in your phone number.');
+      return;
+    }
+    // Require at least 10 characters
+    if (phone.replace(/\s+/g, '').length < 10) {
+      setError('Please enter at least 10 digits for your phone number.');
       return;
     }
     if (password !== confirmPassword) {
@@ -38,25 +48,18 @@ function SignUp() {
     }
     setLoading(true);
     try {
-      // Check if phone or username already exists
+      // Check if phone already exists
       const usersRef = collection(db, 'users');
       const q = query(usersRef, where('phone', '==', phone));
-      const q2 = query(usersRef, where('username', '==', username));
-      const [snap1, snap2] = await Promise.all([getDocs(q), getDocs(q2)]);
-      if (!snap1.empty) {
+      const snap = await getDocs(q);
+      if (!snap.empty) {
         setError('Phone number already in use.');
-        setLoading(false);
-        return;
-      }
-      if (!snap2.empty) {
-        setError('Username already in use.');
         setLoading(false);
         return;
       }
       // Save user with plain text password (for demo only) and sign-ins array
       await setDoc(doc(db, 'users', phone), {
         phone,
-        username,
         password, // plain text
         'sign-ins': [
           { datetime: getReadableDatetime() }
@@ -66,7 +69,7 @@ function SignUp() {
       localStorage.setItem('userPhone', phone);
       navigate('/meet-buddy');
     } catch (err) {
-      setError(err.message);
+      setError('An error occurred. Please enter a valid phone number and try again.');
     }
     setLoading(false);
   };
@@ -82,9 +85,9 @@ function SignUp() {
             <label className="signin-label">Phone number
               <input className="signin-input" type="tel" name="phone" autoComplete="tel" value={phone} onChange={e => setPhone(e.target.value)} />
             </label>
-            <label className="signin-label">Username
+            {/* <label className="signin-label">Username
               <input className="signin-input" type="text" name="username" autoComplete="username" value={username} onChange={e => setUsername(e.target.value)} />
-            </label>
+            </label> */}
             <label className="signin-label">Password
               <input className="signin-input" type="password" name="password" autoComplete="new-password" value={password} onChange={e => setPassword(e.target.value)} />
             </label>

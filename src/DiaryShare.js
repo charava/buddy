@@ -21,7 +21,7 @@ function DiaryShare() {
   const navigate = useNavigate();
   const message = location.state?.message || '';
   const entryId = location.state?.entryId;
-  const [sent, setSent] = useState(null); // null | 'ella' | 'journal'
+  const [sent, setSent] = useState(null); 
   const [loading, setLoading] = useState(false);
   const [buddyName, setBuddyName] = useState('Buddy');
 
@@ -81,13 +81,13 @@ function DiaryShare() {
   };
 
   const handleSend = async () => {
-    await updateDiaryEntry({ 'sent-to-buddy': true, 'chose-to-just-save-to-journal': false }, true);
+    await updateDiaryEntry({ 'sent-to-buddy': true}, true);
     setSent('ella');
   };
-  const handleSave = async () => {
-    await updateDiaryEntry({ 'sent-to-buddy': false, 'chose-to-just-save-to-journal': true }, false);
-    setSent('journal');
-  };
+  // const handleSave = async () => {
+  //   await updateDiaryEntry({ 'sent-to-buddy': false}, false);
+  //   setSent('journal');
+  // };
   const handleBack = () => navigate(-1);
   const handleProfile = (e) => { e.preventDefault(); navigate('/meet-buddy'); };
 
@@ -124,9 +124,9 @@ function DiaryShare() {
             <span className="diary-share-bubble-text">{message}</span>
           </div>
           <button className="diary-share-send-btn" onClick={handleSend} disabled={loading}>Send to {buddyName} &rarr;</button>
-          <button className="diary-share-save-btn" onClick={handleSave} disabled={loading}>Nope just save it to my journal</button>
+          {/* <button className="diary-share-save-btn" onClick={handleSave} disabled={loading}>Nope just save it to my journal</button> */}
           {sent === 'ella' && <div className="diary-share-confirm">Great! Just sent to {buddyName}!</div>}
-          {sent === 'journal' && <div className="diary-share-confirm">Saved to your journal.</div>}
+          {/* {sent === 'journal' && <div className="diary-share-confirm">Saved to your journal.</div>} */}
         </div>
       </div>
     </div>

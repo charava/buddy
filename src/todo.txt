@@ -9,11 +9,15 @@ screenshot the screens for nic to design.
 
 REMOVE JOURNAL button. 
 
+add a ntification badge if they have new messages in their mailbox
 add PNs with sms integration
 
 
 add content moderation - with an AI thing. 
 
+
+
+THINGS TO TEST:
 what happens if we deliberately censor / tailor the messages - how do kids respond?
 
 what is the daily retention rate across 72 hours...
@@ -23,7 +27,6 @@ what is the daily retention rate across 72 hours...
 
 
 
-add a ntification badge if they have new messages in their mailbox
 
 change the colors to match somethings aesthetic
 
@@ -32,16 +35,12 @@ add somethings backdrops
 change the datetime on the messages cards to say today if it was today 
 
 
-add security measures for firebase server
+add security measures for firebase server!!!!
 
 
 
 write a python script to push these people.  make sure to capitalize their name
-
-
-TOMORROW:
-- what do i actually what i want to learn from releasing the web app...
-- concerns
+push the profiles to our database
 
 
 
