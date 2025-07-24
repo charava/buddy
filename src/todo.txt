@@ -1,0 +1,59 @@
+fix the styling of the reply and sent messages (of the message details) pages
+fix the home screen UI to look prettier
+
+
+add content moderation
+
+what happens if we deliberately censor / tailor the messages - how do kids respond?
+
+what is the daily retention rate across 72 hours...
+
+
+
+
+
+
+add a ntification badge if they have new messages in their mailbox
+
+change the colors to match somethings aesthetic
+
+add somethings backdrops
+
+change the datetime on the messages cards to say today if it was today 
+
+
+add security measures for firebase server
+
+
+
+write a python script to push these people.  make sure to capitalize their name
+
+
+TOMORROW:
+- what do i actually what i want to learn from releasing the web app...
+- concerns
+
+
+
+
+
+
+---
+
+
+add a "journal" page or add it to the messages page...
+
+
+for sending an diary share, have it also push to the buddy's diary entry 
+
+
+
+add security measures to firestore database - security rules
+
+
+add phone number auth
+
+encrypt using bcrypt the passwords
+
+
+embed easter eggs that point to me...for the future
