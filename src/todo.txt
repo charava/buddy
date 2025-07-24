@@ -2,7 +2,17 @@ fix the styling of the reply and sent messages (of the message details) pages
 fix the home screen UI to look prettier
 
 
-add content moderation
+build for mobile.!!!
+
+screenshot the screens for nic to design.
+
+
+REMOVE JOURNAL button. 
+
+add PNs with sms integration
+
+
+add content moderation - with an AI thing. 
 
 what happens if we deliberately censor / tailor the messages - how do kids respond?
 
