@@ -6,6 +6,9 @@
 .pnp.js
 
 
+firestore_rules/
+
+
 src/todo.txt
 
 # .env    
