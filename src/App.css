@@ -1225,6 +1225,7 @@ overflow: hidden;
   align-items: center;
   justify-content: center;
   transition: background 0.2s;
+  background: white;
 
   /* gap: 12px; */
 }
