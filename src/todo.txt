@@ -1,19 +1,25 @@
-fix the styling of the reply and sent messages (of the message details) pages
-fix the home screen UI to look prettier
+change contact support.. message
 
 
-build for mobile.!!!
-
-screenshot the screens for nic to design.
+ADD FIREBASE auth / add security measures for firebase server!!!!
 
 
-REMOVE JOURNAL button. 
+change the firebase thing back to process.env variables
 
-add a ntification badge if they have new messages in their mailbox
+
+
+----
+
+add a username rendered in the header so you know what you're signed in as
+
+
+probably can take out the diaryshare.js 
+
+
+
 add PNs with sms integration
 
 
-add content moderation - with an AI thing. 
 
 
 
@@ -26,22 +32,7 @@ what is the daily retention rate across 72 hours...
 
 
 
-
-
-change the colors to match somethings aesthetic
-
-add somethings backdrops
-
-change the datetime on the messages cards to say today if it was today 
-
-
-add security measures for firebase server!!!!
-
-
-
-write a python script to push these people.  make sure to capitalize their name
-push the profiles to our database
-
+add content moderation - with an AI thing. 
 
 
 
@@ -49,8 +40,6 @@ push the profiles to our database
 
 ---
 
-
-add a "journal" page or add it to the messages page...
 
 
 for sending an diary share, have it also push to the buddy's diary entry 

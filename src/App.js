@@ -8,12 +8,15 @@ import Home from './Home';
 import DiaryShare from './DiaryShare';
 import Messages from './Messages';
 import MessageDetail from './MessageDetail';
+import About from './About';
 
 function App() {
+  
   return (
     <Router>
       <Routes>
         <Route path="/" element={<LandingPage />} />
+        <Route path="/about" element={<About />} />
         <Route path="/signin" element={<SignIn />} />
         <Route path="/signup" element={<SignUp />} />
         <Route path="/meet-buddy" element={<MeetBuddy />} />

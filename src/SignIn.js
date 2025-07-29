@@ -22,6 +22,39 @@ function SignIn() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [step, setStep] = useState(1); // 1: phone, 2: password
+
+  const handleNext = (e) => {
+    e.preventDefault();
+    setError('');
+    // Phone validation (same as before)
+    if (identifier.includes('-')) {
+      setError('Please do not use hyphens in your phone number.');
+      return;
+    }
+    if (identifier.includes(' ')) {
+      setError('Please do not use spaces in your phone number.');
+      return;
+    }
+    if (identifier.includes('+')) {
+      setError('Please do not use "+" in your phone number.');
+      return;
+    }
+    if (identifier.includes('(') || identifier.includes(')')) {
+      setError('Please do not use parentheses in your phone number.');
+      return;
+    }
+    // Check if US users are including country code "1"
+    if (identifier.startsWith('1') && identifier.length === 11) {
+      setError('For US numbers, please do not include the "1" country code.');
+      return;
+    }
+    if (identifier.replace(/\s+/g, '').length < 10) {
+      setError('Please enter at least 10 digits for your phone number.');
+      return;
+    }
+    setStep(2);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -39,6 +72,14 @@ function SignIn() {
       }
       const userDoc = snap.docs[0];
       const user = userDoc.data();
+      
+      // Check if user has an empty password (treat as non-existent)
+      if (!user.password || user.password.trim() === '') {
+        setError('User not found.');
+        setLoading(false);
+        return;
+      }
+      
       if (user.password !== password) {
         setError('Incorrect password.');
         setLoading(false);
@@ -52,30 +93,35 @@ function SignIn() {
       });
       navigate('/home');
     } catch (err) {
-      setError(err.message);
+      // Check if the error might be due to country code
+      if (identifier.startsWith('1') && identifier.length === 11) {
+        setError('For US numbers, please do not include the "1" country code.');
+      } else {
+        setError(err.message);
+      }
     }
     setLoading(false);
   };
 
   return (
-    <div className="App-bg">
-      <div className="card">
-        <div className="card-content">
-          <div style={{ height: '40px' }}></div>
-          <h2 className="welcome">Sign in to</h2>
-          <h1 className="buddy">Buddy</h1>
-          <form className="signin-form" autoComplete="off" onSubmit={handleSubmit}>
-            <label className="signin-label">Phone number
-              <input className="signin-input" type="text" name="identifier" autoComplete="username" value={identifier} onChange={e => setIdentifier(e.target.value)} />
-            </label>
-            <label className="signin-label">Password
-              <input className="signin-input" type="password" name="password" autoComplete="current-password" value={password} onChange={e => setPassword(e.target.value)} />
-            </label>
-            <button className="sign-in-btn" type="submit" disabled={loading}>Sign in</button>
-            {error && <div style={{ color: 'red', marginTop: 12 }}>{error}</div>}
-          </form>
-        </div>
-      </div>
+    <div className="landing-card">
+      <img src="/Buddy_Logo.png" alt="Somethings Buddy Logo" className="buddy-logo-top"/>
+      <img src="/cloud.png" alt="Clouds" className="cloud-img-top" />
+      <form className="signin-form" autoComplete="off" onSubmit={step === 1 ? handleNext : handleSubmit}>
+        {step === 1 && (
+          <>
+              <input className="signin-input" placeholder="what's your phone number?" type="tel" name="identifier" autoComplete="tel" value={identifier} onChange={e => setIdentifier(e.target.value)} />
+            <button className="landing-btn" type="submit" disabled={loading}>next</button>
+          </>
+        )}
+        {step === 2 && (
+          <>
+            <input className="signin-input" placeholder="what's your password?" type="password" name="password" autoComplete="current-password" value={password} onChange={e => setPassword(e.target.value)} />
+            <button className="landing-btn" type="submit" disabled={loading}>sign in</button>
+          </>
+        )}
+        {error && <div style={{ color: 'red', marginTop: 12 }}>{error}</div>}
+      </form>
     </div>
   );
 }

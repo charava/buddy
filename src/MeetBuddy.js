@@ -3,6 +3,8 @@ import './App.css';
 import { useNavigate } from 'react-router-dom';
 import { db } from './firebase';
 import { doc, getDoc } from 'firebase/firestore';
+// import BuddyHeader from './components/BuddyHeader';
+
 
 function MeetBuddy() {
   const navigate = useNavigate();
@@ -34,35 +36,57 @@ function MeetBuddy() {
   }
 
   return (
-    <div className="App-bg">
+    <div className="meet-buddy-bg">
+      <div className="buddy-header-container">
+        <img src="/Buddy_Logo.png" alt="Somethings Buddy Logo" className="buddy-logo-top"/>
+        <img src="/cloud.png" alt="Clouds" className="cloud-img-top" />
+        
+          <div className="buddy-header-bar">
+            <button
+              className="buddy-header-signout"
+              onClick={() => {
+                localStorage.clear();
+                navigate('/');
+              }}
+            >
+              sign out
+            </button>
+        
+
+      </div>
+      </div>
+
+
+
       <div className="card meet-buddy-card">
         <div className="card-content">
-          <h2 className="meet-buddy-title">Meet your buddy!</h2>
           <div className="buddy-info-box">
             <div className="buddy-header">
+              <div className="buddy-name-label">my buddy: </div>
               <span className="buddy-name">{buddy.username}</span>
             </div>
             <div className="buddy-age-gender">{buddy.age} years old • {buddy.gender}</div>
-            <div className="buddy-section-label">Challenges</div>
-            <div className="buddy-challenges">
-              {(buddy.challenges || []).map((c, i) => (
-                <span key={i} className={buddy['must-have-challenges'] && buddy['must-have-challenges'].includes(c) ? 'buddy-challenge filled' : 'buddy-challenge'}>{c}</span>
-              ))}
-            </div>
-            <div className="buddy-section-label" style={{marginTop: '18px'}}>My situation</div>
             <div className="buddy-situation-box">
               {buddy.story}
             </div>
-            <div className="buddy-section-label" style={{marginTop: '18px', fontWeight: 500}}>Communication Frequency: {buddy['comm-freq']}</div>
+
+            <div className="buddy-challenges">
+              {(buddy.challenges || []).map((c, i) => (
+                <span key={i} className="buddy-challenge filled">{c}</span>
+              ))}
+            </div>
+            
+            <div className="buddy-section-label" style={{marginTop: '18px', fontWeight: 500}}><strong>communication frequency:</strong> {buddy['comm-freq']}</div>
             <div className="buddy-socials">
-              {buddy['social-insta'] && buddy['social-insta'].trim() !== '' && <>Instagram: {buddy['social-insta']}<br/></>}
-              {buddy['social-snap'] && buddy['social-snap'].trim() !== '' && <>Snapchat: {buddy['social-snap']}<br/></>}
-              {buddy['social-twitter'] && buddy['social-twitter'].trim() !== '' && <>Twitter: {buddy['social-twitter']}<br/></>}
-              {buddy['social-link'] && buddy['social-link'].trim() !== '' && <>LinkedIn: {buddy['social-link']}<br/></>}
+              {buddy['social-insta'] && buddy['social-insta'].trim() !== '' && <><strong>instagram:</strong> {buddy['social-insta']}<br/></>}
+              {buddy['social-snap'] && buddy['social-snap'].trim() !== '' && <><strong>snapchat:</strong> {buddy['social-snap']}<br/></>}
+              {buddy['social-twitter'] && buddy['social-twitter'].trim() !== '' && <><strong>twitter:</strong> {buddy['social-twitter']}<br/></>}
+              {buddy['social-link'] && buddy['social-link'].trim() !== '' && <><strong>linkedin:</strong> {buddy['social-link']}<br/></>}
             </div>
           </div>
+          <button className="landing-btn" onClick={handleNext}>→</button>
+
         </div>
-        <button className="meet-buddy-next-btn" onClick={handleNext}>→</button>
       </div>
     </div>
   );

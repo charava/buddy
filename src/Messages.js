@@ -25,6 +25,48 @@ function parseCustomDatetime(dt) {
   return 0;
 }
 
+function formatCondensedTimestamp(datetime) {
+  if (!datetime) return '';
+  
+  // Parse the datetime string
+  const match = datetime.match(/^([A-Za-z]+) (\d{1,2}), (\d{4}) at (\d{1,2}):(\d{2}) (AM|PM)$/);
+  if (!match) return datetime;
+  
+  let [_, monthName, day, year, hour, minute, ampm] = match;
+  const months = [
+    'January','February','March','April','May','June','July','August','September','October','November','December'
+  ];
+  const month = months.indexOf(monthName);
+  if (month === -1) return datetime;
+  
+  // Convert hour based on AM/PM
+  hour = parseInt(hour, 10);
+  if (ampm === 'PM' && hour !== 12) hour += 12;
+  if (ampm === 'AM' && hour === 12) hour = 0;
+  
+  const date = new Date(year, month, day, hour, minute);
+  const now = new Date();
+  
+  // Check if it's today
+  const isToday = date.toDateString() === now.toDateString();
+  
+  if (isToday) {
+    // Format as "today 5:30pm"
+    const timeStr = date.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    }).toLowerCase();
+    return `today ${timeStr}`;
+  } else {
+    // Format as "6/7/14"
+    const monthStr = (month + 1).toString();
+    const dayStr = day.toString();
+    const yearStr = year.toString().slice(-2);
+    return `${monthStr}/${dayStr}/${yearStr}`;
+  }
+}
+
 function Messages() {
   const navigate = useNavigate();
   const [messages, setMessages] = useState([]);
@@ -81,7 +123,7 @@ function Messages() {
   };
 
   return (
-    <div className="App-bg">
+    <div className="landing-bg">
       <div className="card-two messages-card">
         <BuddyHeader onProfileClick={handleProfileClick} />
         <div className="messages-list">
@@ -91,17 +133,26 @@ function Messages() {
             if (entry._type === 'received' && entry['replied-to-buddys-diary-entry-datetime']) {
               return (
                 <div className="messages-bubble-reply-pair align-left" key={entry['diary-entry-id'] + '-received-replied'}>
-                  <div className="messages-bubble messages-bubble-received-transparent messages-bubble-large">
+                  <div 
+                    className="messages-bubble messages-bubble-received messages-bubble-received-transparent messages-bubble-large"
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => navigate(`/messages/${entry['diary-entry-id']}`, { state: { buddyPhone, entryId: entry['diary-entry-id'], showMyReply: true } })}
+                  >
+                    <img src="/play-arrow-grey.png" alt="Play" className="play-icon" />
                     <span className="messages-bubble-label messages-bubble-label-received messages-bubble-label-large">
-                      Received {buddyName}'s diary entry
+                      Received {buddyName}'s note
                     </span>
-                    <span className="messages-bubble-timestamp">{entry.datetime}</span>
+                    <span className="messages-bubble-timestamp">{formatCondensedTimestamp(entry.datetime)}</span>
                   </div>
-                  <div className="messages-bubble messages-bubble-sent messages-bubble-large">
+                  <div 
+                    className="messages-bubble messages-bubble-sent messages-bubble-large"
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => navigate(`/messages/${entry['diary-entry-id']}`, { state: { buddyPhone, entryId: entry['diary-entry-id'], showMyReply: true } })}
+                  >
                     <span className="messages-bubble-label messages-bubble-label-sent messages-bubble-label-large">
-                      Replied
+                      Supported {buddyName} &lt;3
                     </span>
-                    <span className="messages-bubble-timestamp">{entry['replied-to-buddys-diary-entry-datetime']}</span>
+                    <span className="messages-bubble-timestamp">{formatCondensedTimestamp(entry['replied-to-buddys-diary-entry-datetime'])}</span>
                   </div>
                 </div>
               );
@@ -111,11 +162,16 @@ function Messages() {
               const hasViewedReply = entry['buddys-reply']['clicked-on-buddys-reply-datetime'] && entry['buddys-reply']['clicked-on-buddys-reply-datetime'].trim() !== '';
               return (
                 <div className="messages-bubble-reply-pair align-right" key={entry['diary-entry-id'] + '-sent-replied'}>
-                  <div className="messages-bubble messages-bubble-sent messages-bubble-large">
+                  <div 
+                    className="messages-bubble messages-bubble-sent messages-bubble-large"
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => navigate(`/messages/${entry['diary-entry-id']}`, { state: { buddyPhone, entryId: entry['diary-entry-id'], showReply: true } })}
+                  >
                     <span className="messages-bubble-label messages-bubble-label-sent messages-bubble-label-large">
-                      Sent my diary entry
+                      Sent note
                     </span>
-                    <span className="messages-bubble-timestamp">{entry.datetime}</span>
+                    <span className="messages-bubble-timestamp">{formatCondensedTimestamp(entry.datetime)}</span>
+                    <img src="/play-arrow-grey.png" alt="Play" className="play-icon play-icon-right" />
                   </div>
                   <div
                     className={`messages-bubble messages-bubble-received messages-bubble-large${!hasViewedReply ? ' messages-bubble-received-new' : ' messages-bubble-received-transparent'}`}
@@ -123,9 +179,9 @@ function Messages() {
                     onClick={() => navigate(`/messages/${entry['diary-entry-id']}`, { state: { buddyPhone, entryId: entry['diary-entry-id'], showReply: true } })}
                   >
                     <span className="messages-bubble-label messages-bubble-label-received messages-bubble-label-large">
-                      {!hasViewedReply ? `New reply from ${buddyName}` : `Received ${buddyName}'s reply`}
+                      {!hasViewedReply ? `${buddyName} sent support <3` : `Received ${buddyName}'s reply`}
                     </span>
-                    <span className="messages-bubble-timestamp">{entry['buddys-reply'] && entry['buddys-reply']['buddys-reply-datetime'] ? entry['buddys-reply']['buddys-reply-datetime'] : (entry['buddys-reply']['clicked-on-buddys-reply-datetime'] || entry.datetime || '—')}</span>
+                    <span className="messages-bubble-timestamp">{formatCondensedTimestamp(entry['buddys-reply'] && entry['buddys-reply']['buddys-reply-datetime'] ? entry['buddys-reply']['buddys-reply-datetime'] : (entry['buddys-reply']['clicked-on-buddys-reply-datetime'] || entry.datetime || '—'))}</span>
                   </div>
                 </div>
               );
@@ -139,8 +195,9 @@ function Messages() {
                   style={{ cursor: 'pointer', position: 'relative' }}
                   onClick={() => navigate(`/messages/${entry['diary-entry-id']}`, { state: { buddyPhone, entryId: entry['diary-entry-id'] } })}
                 >
-                  <span className="messages-bubble-label messages-bubble-label-received">New diary entry from {buddyName}</span>
-                  <span className="messages-bubble-timestamp">{entry.datetime}</span>
+                  <img src="/play-arrow-color.png" alt="Play" className="play-icon" />
+                  <span className="messages-bubble-label messages-bubble-label-received">{buddyName} sent a note</span>
+                  <span className="messages-bubble-timestamp">{formatCondensedTimestamp(entry.datetime)}</span>
                 </div>
               );
             }
@@ -152,8 +209,9 @@ function Messages() {
                 style={{ cursor: 'pointer', position: 'relative' }}
                 onClick={() => navigate(`/messages/${entry['diary-entry-id']}`, { state: { buddyPhone, entryId: entry['diary-entry-id'], showReply: true } })}
               >
-                <span className="messages-bubble-label messages-bubble-label-sent">Sent my diary entry</span>
-                <span className="messages-bubble-timestamp">{entry.datetime}</span>
+                <span className="messages-bubble-label messages-bubble-label-sent">Sent note</span>
+                <span className="messages-bubble-timestamp">{formatCondensedTimestamp(entry.datetime)}</span>
+                <img src="/play-arrow-grey.png" alt="Play" className="play-icon play-icon-right" />
               </div>
             );
           })}

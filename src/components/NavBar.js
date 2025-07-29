@@ -1,9 +1,51 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../App.css';
+import { db } from '../firebase';
+import { doc, getDoc } from 'firebase/firestore';
 
 function NavBar({ active }) {
   const navigate = useNavigate();
+  const [hasUnreadMessages, setHasUnreadMessages] = useState(false);
+
+  useEffect(() => {
+    const checkUnreadMessages = async () => {
+      const userPhone = localStorage.getItem('userPhone');
+      if (!userPhone) return;
+      
+      try {
+        const userRef = doc(db, 'users', userPhone);
+        const userSnap = await getDoc(userRef);
+        if (!userSnap.exists()) return;
+        
+        const userData = userSnap.data();
+        const buddyEntries = userData['buddy-diary-entries'] || [];
+        const diaryEntries = userData['diary-entries'] || [];
+        
+        // Check if there are any received messages that haven't been replied to
+        const hasUnrepliedMessages = buddyEntries.some(entry => 
+          !entry['replied-to-buddys-diary-entry-datetime'] || 
+          entry['replied-to-buddys-diary-entry-datetime'].trim() === ''
+        );
+        
+        // Check if there are any new replies from buddy that haven't been clicked on
+        const hasUnreadReplies = diaryEntries.some(entry => 
+          entry['buddys-reply'] && 
+          entry['buddys-reply']['buddys-reply-content'] && 
+          entry['buddys-reply']['buddys-reply-content'].trim() !== '' &&
+          (!entry['buddys-reply']['clicked-on-buddys-reply-datetime'] || 
+           entry['buddys-reply']['clicked-on-buddys-reply-datetime'].trim() === '')
+        );
+        
+        setHasUnreadMessages(hasUnrepliedMessages || hasUnreadReplies);
+      } catch (error) {
+        console.error('Error checking unread messages:', error);
+      }
+    };
+
+    checkUnreadMessages();
+  }, []);
+
   return (
     <div className="home-bottom-nav">
       <div
@@ -19,7 +61,7 @@ function NavBar({ active }) {
         </svg>
       </div>
       <div
-        className={`home-bottom-nav-btn${active === 'messages' ? ' home-bottom-nav-btn-active' : ''}`}
+        className={`home-bottom-nav-btn${active === 'messages' ? ' home-bottom-nav-btn-active' : ''}${hasUnreadMessages ? ' home-bottom-nav-btn-notification' : ''}`}
         onClick={() => navigate('/messages')}
       >
         {/* Envelope/mail icon */}
@@ -27,6 +69,10 @@ function NavBar({ active }) {
           <rect x="10" y="18" width="44" height="28" rx="6" fill="none" stroke="#222" strokeWidth="3" />
           <polyline points="10,18 32,38 54,18" fill="none" stroke="#222" strokeWidth="3" />
         </svg>
+        {/* Notification dot */}
+        {hasUnreadMessages && (
+          <div className="home-bottom-nav-notification-dot" />
+        )}
       </div>
     </div>
   );

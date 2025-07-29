@@ -18,6 +18,48 @@ function getReadableDatetime() {
   });
 }
 
+function formatCondensedTimestamp(datetime) {
+  if (!datetime) return '';
+  
+  // Parse the datetime string
+  const match = datetime.match(/^([A-Za-z]+) (\d{1,2}), (\d{4}) at (\d{1,2}):(\d{2}) (AM|PM)$/);
+  if (!match) return datetime;
+  
+  let [_, monthName, day, year, hour, minute, ampm] = match;
+  const months = [
+    'January','February','March','April','May','June','July','August','September','October','November','December'
+  ];
+  const month = months.indexOf(monthName);
+  if (month === -1) return datetime;
+  
+  // Convert hour based on AM/PM
+  hour = parseInt(hour, 10);
+  if (ampm === 'PM' && hour !== 12) hour += 12;
+  if (ampm === 'AM' && hour === 12) hour = 0;
+  
+  const date = new Date(year, month, day, hour, minute);
+  const now = new Date();
+  
+  // Check if it's today
+  const isToday = date.toDateString() === now.toDateString();
+  
+  if (isToday) {
+    // Format as "today 5:30pm"
+    const timeStr = date.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    }).toLowerCase();
+    return `today ${timeStr}`;
+  } else {
+    // Format as "6/7/14"
+    const monthStr = (month + 1).toString();
+    const dayStr = day.toString();
+    const yearStr = year.toString().slice(-2);
+    return `${monthStr}/${dayStr}/${yearStr}`;
+  }
+}
+
 function MessageDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -25,11 +67,13 @@ function MessageDetail() {
   const buddyPhone = location.state?.buddyPhone;
   const entryId = location.state?.entryId || id;
   const showReply = location.state?.showReply;
+  const showMyReply = location.state?.showMyReply;
   const [entry, setEntry] = useState(null);
   const [loading, setLoading] = useState(true);
   const [buddyName, setBuddyName] = useState('Buddy');
   const [reply, setReply] = useState('');
   const [sent, setSent] = useState(false);
+  const [showReplyInput, setShowReplyInput] = useState(false);
 
   useEffect(() => {
     const fetchEntry = async () => {
@@ -47,8 +91,8 @@ function MessageDetail() {
         const entries = userData['diary-entries'] || [];
         const found = entries.find(e => e['diary-entry-id'] === entryId);
         setEntry(found || null);
-        // Update clicked-on-buddys-reply-datetime when viewing the reply
-        if (found) {
+        // Update clicked-on-buddys-reply-datetime when viewing the reply (only if not already set)
+        if (found && (!found['buddys-reply'] || !found['buddys-reply']['clicked-on-buddys-reply-datetime'] || found['buddys-reply']['clicked-on-buddys-reply-datetime'].trim() === '')) {
           const updatedDiaryEntries = entries.map(e => {
             if (e['diary-entry-id'] === entryId) {
               return {
@@ -63,6 +107,26 @@ function MessageDetail() {
           });
           await updateDoc(userRef, { 'diary-entries': updatedDiaryEntries });
         }
+      } else if (showMyReply) {
+        // Fetch user's reply from buddy's diary entry
+        if (!buddyPhone || !entryId) return;
+        const buddyRef = doc(db, 'users', buddyPhone);
+        const buddySnap = await getDoc(buddyRef);
+        if (!buddySnap.exists()) return;
+        const buddyData = buddySnap.data();
+        setBuddyName(buddyData.username || 'Buddy');
+        const entries = buddyData['diary-entries'] || [];
+        const found = entries.find(e => e['diary-entry-id'] === entryId);
+        if (found && found['buddys-reply'] && found['buddys-reply']['buddys-reply-content']) {
+          setEntry({
+            ...found,
+            'diary-entry-id': entryId,
+            'buddys-reply': found['buddys-reply'],
+            'replied-to-buddys-diary-entry-datetime': found['buddys-reply']['buddys-reply-datetime'] || getReadableDatetime()
+          });
+        } else {
+          setEntry(null);
+        }
       } else {
         // Fetch buddy's diary entry
         if (!buddyPhone || !entryId) return;
@@ -74,7 +138,7 @@ function MessageDetail() {
         const entries = buddyData['diary-entries'] || [];
         const found = entries.find(e => e['diary-entry-id'] === entryId);
         setEntry(found || null);
-        // Update clicked-on-buddys-diary-entry-datetime in user's buddy-diary-entries
+        // Update clicked-on-buddys-diary-entry-datetime in user's buddy-diary-entries (only if not already set)
         const userPhone = localStorage.getItem('userPhone');
         if (userPhone) {
           const userRef = doc(db, 'users', userPhone);
@@ -82,22 +146,26 @@ function MessageDetail() {
           if (userSnap.exists()) {
             const userData = userSnap.data();
             const buddyEntries = userData['buddy-diary-entries'] || [];
-            const updatedBuddyEntries = buddyEntries.map(e =>
-              e['diary-entry-id'] === entryId
-                ? {
-                    ...e,
-                    'clicked-on-buddys-diary-entry-datetime': getReadableDatetime()
-                  }
-                : e
-            );
-            await updateDoc(userRef, { 'buddy-diary-entries': updatedBuddyEntries });
+            const existingEntry = buddyEntries.find(e => e['diary-entry-id'] === entryId);
+            // Only update if the clicked-on timestamp doesn't exist or is empty
+            if (!existingEntry || !existingEntry['clicked-on-buddys-diary-entry-datetime'] || existingEntry['clicked-on-buddys-diary-entry-datetime'].trim() === '') {
+              const updatedBuddyEntries = buddyEntries.map(e =>
+                e['diary-entry-id'] === entryId
+                  ? {
+                      ...e,
+                      'clicked-on-buddys-diary-entry-datetime': getReadableDatetime()
+                    }
+                  : e
+              );
+              await updateDoc(userRef, { 'buddy-diary-entries': updatedBuddyEntries });
+            }
           }
         }
       }
       setLoading(false);
     };
     fetchEntry();
-  }, [buddyPhone, entryId, showReply]);
+  }, [buddyPhone, entryId, showReply, showMyReply]);
 
   useEffect(() => {
     if (sent) {
@@ -114,6 +182,11 @@ function MessageDetail() {
   };
 
   const handleReply = async () => {
+    if (!showReplyInput) {
+      setShowReplyInput(true);
+      return;
+    }
+    
     if (!reply.trim()) return;
     setLoading(true);
     // Update buddy's diary entry with reply
@@ -128,6 +201,7 @@ function MessageDetail() {
               ...e,
               "buddys-reply": {
                 "buddys-reply-content": reply,
+                "buddys-reply-datetime": getReadableDatetime(),
                 "clicked-on-buddys-reply-datetime": ''
               }
             }
@@ -171,52 +245,103 @@ function MessageDetail() {
     }
     setSent(true);
     setLoading(false);
+    setTimeout(() => {
+      navigate('/messages');
+    }, 1000);
   };
 
   return (
-    <div className="App-bg">
-      <div className="card message-detail-card">
+    <div className="landing-bg">
+      <div className="card-two messages-card">
         <BuddyHeader onProfileClick={handleProfileClick} />
         {loading && <div>Loading...</div>}
         {!loading && entry && showReply && (
           <>
-            <div className="message-detail-bubble" style={{ background: '#e0f2ff', border: '4px solid #32a8ff', borderRadius: '36px', marginBottom: 24 }}>
-              <div className="message-detail-title" style={{ fontSize: '2.2rem', fontWeight: 700, textAlign: 'center', marginBottom: 24 }}>Sent my diary entry
-                <span className="messages-bubble-timestamp" style={{ float: 'right', fontSize: '1.2rem', fontWeight: 400 }}>{entry.datetime}</span>
+            <div className="message-detail-bubble">
+              <div className="message-detail-title-container">
+              <div className="message-detail-timestamp">{formatCondensedTimestamp(entry.datetime)}</div>
+
+                <div className="message-detail-title">
+                  my note
+                </div>
               </div>
-              <div style={{ background: '#fff', border: '4px solid #32a8ff', borderRadius: '18px', padding: 18, fontSize: '1.18rem', color: '#222', marginBottom: 24 }}>{entry['diary-entry-content']}</div>
+              <div className="message-detail-content">{entry['diary-entry-content']}</div>
               {entry['buddys-reply'] && entry['buddys-reply']['buddys-reply-content'] && (
                 <>
-                  <div style={{ color: '#a78bfa', fontWeight: 700, fontSize: '1.3rem', marginBottom: 8 }}>{buddyName} replied...</div>
-                  <div style={{ background: '#ede6ff', border: '4px solid #a78bfa', borderRadius: '18px', padding: 18, fontSize: '1.18rem', color: '#222', marginBottom: 8 }}>{entry['buddys-reply']['buddys-reply-content']}</div>
-                  <div style={{ color: '#888', fontSize: '1rem', textAlign: 'right' }}>{entry['buddys-reply']['clicked-on-buddys-reply-datetime']}</div>
+                  {/* <div className="message-detail-timestamp">{formatCondensedTimestamp(entry['buddys-reply']['clicked-on-buddys-reply-datetime'])}</div> */}
+
+                  <div className="message-detail-reply-section">{buddyName} replied</div>
+                  <div className="message-detail-reply-content">{entry['buddys-reply']['buddys-reply-content']}</div>
                 </>
               )}
             </div>
-            <button className="message-detail-back-btn" onClick={() => navigate(-1)}>&larr; Back</button>
+            <button className="message-detail-back-btn" onClick={() => navigate(-1)}>&larr; back</button>
           </>
         )}
-        {!loading && entry && !showReply && (
+        {!loading && entry && showMyReply && (
           <>
             <div className="message-detail-bubble">
-              <div className="message-detail-title">New diary entry from {buddyName} <span className="messages-bubble-timestamp">{entry.datetime}</span></div>
-              <div className="message-detail-body">{entry['diary-entry-content']}</div>
+              <div className="message-detail-title-container">
+              <div className="message-detail-timestamp">{formatCondensedTimestamp(entry.datetime)}</div>
+
+                <div className="message-detail-title">
+                  new note from {buddyName}
+                </div>
+              </div>
+              <div className="message-detail-content">{entry['diary-entry-content']}</div>
+              {entry['buddys-reply'] && entry['buddys-reply']['buddys-reply-content'] && (
+                <>
+                  {/* <div className="message-detail-timestamp">{formatCondensedTimestamp(entry['buddys-reply']['buddys-reply-datetime'] || entry['replied-to-buddys-diary-entry-datetime'])}</div> */}
+
+                  <div className="message-detail-reply-section">my reply</div>
+                  <div className="message-detail-reply-content">{entry['buddys-reply']['buddys-reply-content']}</div>
+                </>
+              )}
             </div>
-            <div className="message-detail-reply-label">Write a thoughtful reply</div>
-            <textarea
-              className="message-detail-reply-input"
-              placeholder="Type your reply here..."
-              value={reply}
-              onChange={e => setReply(e.target.value)}
-              rows={4}
-              disabled={sent}
-            />
-            <button className="message-detail-send-btn" onClick={handleReply} disabled={loading || sent}>Send</button>
-            <button className="message-detail-back-btn" onClick={() => navigate(-1)}>&larr; Back</button>
+            <button className="message-detail-back-btn" onClick={() => navigate(-1)}>&larr; back</button>
+          </>
+        )}
+        {!loading && entry && !showReply && !showMyReply && (
+          <>
+            <div className="message-detail-bubble"> 
+              <div className="message-detail-title-container">
+              <div className="message-detail-timestamp">{formatCondensedTimestamp(entry.datetime)}</div>
+
+                <div className="message-detail-title">
+                  {buddyName} sent
+                </div>
+              </div>
+              <div className="message-detail-content">{entry['diary-entry-content']}</div>
+            </div>
+            {!showReplyInput ? (
+              <div className="message-detail-reply-button-container">
+                <button className="message-detail-reply-button" onClick={handleReply} disabled={loading || sent}>
+                  <img src="/play-arrow-color.png" alt="Play" />
+                  reply
+                </button>
+              </div>
+            ) : (
+              <div className="message-detail-reply-input-container">
+                <textarea
+                  className="signin-input"
+                  placeholder="type your reply here..."
+                  value={reply}
+                  onChange={e => setReply(e.target.value)}
+                  rows={4}
+                  disabled={sent}
+                />
+                <button className="landing-btn" onClick={handleReply} disabled={loading || sent || !reply.trim()}>
+                  <img src="/play-arrow-color.png" alt="Play" style={{ rotate: '180deg', width: '50px', height: 'auto', marginRight: '8px', verticalAlign: 'middle' }} />
+                  Send
+                </button>
+              
+              </div>
+            )}
+            <button className="message-detail-back-btn" onClick={() => navigate(-1)}>&larr; back</button>
             {sent && <div className="message-detail-confirm">Reply sent!</div>}
           </>
         )}
-        {!loading && !entry && <div>Diary entry not found.</div>}
+        {!loading && !entry && <div>note not found.</div>}
       </div>
       <NavBar active="messages" />
     </div>

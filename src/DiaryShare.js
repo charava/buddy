@@ -16,6 +16,17 @@ function getReadableDatetime() {
   });
 }
 
+// Simple content moderation: list of banned words (demo)
+const BANNED_WORDS = [
+  'badword1', 'badword2', 'inappropriate', 'offensive', 'hate', 'violence', 'kill', 'suicide', 'sex', 'drugs', 'abuse', 'racist', 'homophobic', 'transphobic', 'slur'
+];
+
+function containsInappropriateContent(text) {
+  if (!text) return false;
+  const lower = text.toLowerCase();
+  return BANNED_WORDS.some(word => lower.includes(word));
+}
+
 function DiaryShare() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -24,6 +35,8 @@ function DiaryShare() {
   const [sent, setSent] = useState(null); 
   const [loading, setLoading] = useState(false);
   const [buddyName, setBuddyName] = useState('Buddy');
+  const [diaryText, setDiaryText] = useState(message);
+  const [moderationError, setModerationError] = useState('');
 
   useEffect(() => {
     const fetchBuddyName = async () => {
@@ -43,6 +56,14 @@ function DiaryShare() {
     };
     fetchBuddyName();
   }, []);
+
+  useEffect(() => {
+    if (containsInappropriateContent(diaryText)) {
+      setModerationError('Your diary entry contains inappropriate language. Please edit it to continue.');
+    } else {
+      setModerationError('');
+    }
+  }, [diaryText]);
 
   // Helper to update the diary entry in Firestore and optionally push to buddy's diary entries
   const updateDiaryEntry = async (updateFields, pushToBuddy = false) => {
@@ -81,7 +102,11 @@ function DiaryShare() {
   };
 
   const handleSend = async () => {
-    await updateDiaryEntry({ 'sent-to-buddy': true}, true);
+    if (containsInappropriateContent(diaryText)) {
+      setModerationError('Your diary entry contains inappropriate language. Please edit it to continue.');
+      return;
+    }
+    await updateDiaryEntry({ 'sent-to-buddy': true, message: diaryText }, true);
     setSent('ella');
   };
   // const handleSave = async () => {
@@ -121,9 +146,23 @@ function DiaryShare() {
           <button className="diary-share-back" onClick={handleBack}>&larr; Back</button>
           <div className="diary-share-title">Share your diary<br/>entry with {buddyName}</div>
           <div className="diary-share-bubble">
-            <span className="diary-share-bubble-text">{message}</span>
+            <textarea
+              className="diary-share-bubble-textarea"
+              value={diaryText}
+              onChange={e => setDiaryText(e.target.value)}
+              rows={3}
+              style={{ width: '100%', resize: 'vertical', borderRadius: '12px', padding: '8px', fontSize: '1rem' }}
+              disabled={loading}
+            />
           </div>
-          <button className="diary-share-send-btn" onClick={handleSend} disabled={loading}>Send to {buddyName} &rarr;</button>
+          {moderationError && <div className="diary-share-error" style={{ color: 'red', margin: '8px 0' }}>{moderationError}</div>}
+          <button
+            className="diary-share-send-btn"
+            onClick={handleSend}
+            disabled={loading || !!moderationError || !diaryText.trim()}
+          >
+            Send to {buddyName} &rarr;
+          </button>
           {/* <button className="diary-share-save-btn" onClick={handleSave} disabled={loading}>Nope just save it to my journal</button> */}
           {sent === 'ella' && <div className="diary-share-confirm">Great! Just sent to {buddyName}!</div>}
           {/* {sent === 'journal' && <div className="diary-share-confirm">Saved to your journal.</div>} */}
