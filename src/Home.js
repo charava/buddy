@@ -41,6 +41,7 @@ function Home() {
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [moderationError, setModerationError] = useState('');
+  const [messageSent, setMessageSent] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -107,7 +108,9 @@ function Home() {
       }
       setSent(true);
       setMessage('');
+      setMessageSent(true);
       setTimeout(() => setSent(false), 1500);
+      setTimeout(() => setMessageSent(false), 3000);
     } catch (err) {
       alert('Failed to send diary entry: ' + err.message);
     }
@@ -147,7 +150,7 @@ function Home() {
 
         {sent && <div className="diary-share-confirm">great! just sent to your buddy!</div>}
       {/* </div> */}
-      <NavBar active="home" />
+      <NavBar active="home" messageSent={messageSent} />
     </div>
     </div>
 

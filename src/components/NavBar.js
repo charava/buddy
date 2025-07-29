@@ -4,7 +4,7 @@ import '../App.css';
 import { db } from '../firebase';
 import { doc, getDoc } from 'firebase/firestore';
 
-function NavBar({ active }) {
+function NavBar({ active, messageSent }) {
   const navigate = useNavigate();
   const [hasUnreadMessages, setHasUnreadMessages] = useState(false);
 
@@ -61,7 +61,7 @@ function NavBar({ active }) {
         </svg>
       </div>
       <div
-        className={`home-bottom-nav-btn${active === 'messages' ? ' home-bottom-nav-btn-active' : ''}${hasUnreadMessages ? ' home-bottom-nav-btn-notification' : ''}`}
+        className={`home-bottom-nav-btn${active === 'messages' ? ' home-bottom-nav-btn-active' : ''}${hasUnreadMessages ? ' home-bottom-nav-btn-notification' : ''}${messageSent ? ' home-bottom-nav-btn-message-sent' : ''}`}
         onClick={() => navigate('/messages')}
       >
         {/* Envelope/mail icon */}

@@ -532,6 +532,34 @@ overflow: hidden;
   z-index: 10;
 }
 
+/* Animation for when message is sent */
+.home-bottom-nav-btn-message-sent {
+  animation: messageSentPulse 2s ease-in-out;
+}
+
+@keyframes messageSentPulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  }
+  25% {
+    transform: scale(1.5);
+    box-shadow: 0 12px 32px rgba(255, 175, 215, 0.8);
+  }
+  50% {
+    transform: scale(1.2);
+    box-shadow: 0 8px 24px rgba(255, 175, 215, 0.6);
+  }
+  75% {
+    transform: scale(1.4);
+    box-shadow: 0 12px 32px rgba(255, 175, 215, 0.7);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  }
+}
+
 
 .home-message-input {
   vertical-align: bottom;
