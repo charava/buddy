@@ -29,3 +29,5 @@ Developed as part of my internship in Summer 2025
 ---
 
 ## ⚖️ License
+This project is proprietary. See the [LICENSE](./LICENSE) file for details.
+
