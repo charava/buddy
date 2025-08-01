@@ -1,14 +1,6 @@
-# [Buddy](https://somethings-buddy.vercel.app)
-
-Built for [Somethings Mentorship](https://somethings.com/) (somethings.com)
-
-
-Send deep, intimate notes to a buddy who shares similar experiences with you.
-
-
 # [Buddy](https://buddynotes.vercel.app)
 
-This repository contains the source code and documentation for **BUDDY**, developed by Charlotte Rosario during her 2025 internship at Somethings.
+This repository contains the source code and documentation for **BUDDY**, developed by Charlotte Rosario during her 2025 internship at [Somethings Mentorship](https://somethings.com/) (somethings.com)
 
 > This project is proprietary. Please do not copy, modify, or reuse this code without explicit written permission from the author.
 
