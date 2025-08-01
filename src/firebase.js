@@ -1,4 +1,9 @@
-// Import the functions you need from the SDKs you need
+// Author: Charlotte Rosario
+// Created: July 2025
+// Project: BUDDY
+// Description: Teen-to-teen buddy matching app
+// Last Updated: August 1, 2025
+
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";

@@ -11,6 +11,7 @@ firestore_rules/
 
 src/todo.txt
 
+.venv/
 .env    
 matching-scripts/
 

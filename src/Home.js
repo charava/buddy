@@ -1,3 +1,9 @@
+// Author: Charlotte Rosario
+// Created: July 2025
+// Project: BUDDY
+// Description: Teen-to-teen buddy matching app
+// Last Updated: August 1, 2025
+
 import React, { useState, useEffect } from 'react';
 import './App.css';
 import { useNavigate } from 'react-router-dom';
